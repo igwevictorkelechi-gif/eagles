@@ -17,28 +17,28 @@ app.get("/dashboard", async (c) => {
   const sid = tenant(c);
   const db = c.env.DB;
   const one = async (sql: string) =>
-    ((await db.prepare(sql).bind(sid).first<{ n: number }>())?.n ?? 0);
+    Number((await db.prepare(sql).bind(sid).first<{ n: number }>())?.n ?? 0);
 
   const [students, teachers, classes, subjects, exams] = await Promise.all([
-    one("SELECT COUNT(*) n FROM students WHERE school_id = ?"),
-    one("SELECT COUNT(*) n FROM teachers WHERE school_id = ?"),
-    one("SELECT COUNT(*) n FROM classes WHERE school_id = ?"),
-    one("SELECT COUNT(*) n FROM subjects WHERE school_id = ?"),
-    one("SELECT COUNT(*) n FROM exams WHERE school_id = ?"),
+    one("SELECT CAST(COUNT(*) AS INTEGER) n FROM students WHERE school_id = ?"),
+    one("SELECT CAST(COUNT(*) AS INTEGER) n FROM teachers WHERE school_id = ?"),
+    one("SELECT CAST(COUNT(*) AS INTEGER) n FROM classes WHERE school_id = ?"),
+    one("SELECT CAST(COUNT(*) AS INTEGER) n FROM subjects WHERE school_id = ?"),
+    one("SELECT CAST(COUNT(*) AS INTEGER) n FROM exams WHERE school_id = ?"),
   ]);
 
-  const income = (await db
-    .prepare("SELECT COALESCE(SUM(amount),0) n FROM transactions WHERE school_id = ? AND type = 'income'")
+  const income = Number((await db
+    .prepare("SELECT CAST(COALESCE(SUM(amount),0) AS INTEGER) n FROM transactions WHERE school_id = ? AND type = 'income'")
     .bind(sid)
-    .first<{ n: number }>())?.n ?? 0;
-  const expense = (await db
-    .prepare("SELECT COALESCE(SUM(amount),0) n FROM transactions WHERE school_id = ? AND type = 'expense'")
+    .first<{ n: number }>())?.n ?? 0);
+  const expense = Number((await db
+    .prepare("SELECT CAST(COALESCE(SUM(amount),0) AS INTEGER) n FROM transactions WHERE school_id = ? AND type = 'expense'")
     .bind(sid)
-    .first<{ n: number }>())?.n ?? 0;
-  const outstanding = (await db
-    .prepare("SELECT COALESCE(SUM(amount - amount_paid),0) n FROM student_fees WHERE school_id = ?")
+    .first<{ n: number }>())?.n ?? 0);
+  const outstanding = Number((await db
+    .prepare("SELECT CAST(COALESCE(SUM(amount - amount_paid),0) AS INTEGER) n FROM student_fees WHERE school_id = ?")
     .bind(sid)
-    .first<{ n: number }>())?.n ?? 0;
+    .first<{ n: number }>())?.n ?? 0);
 
   const recent = await db
     .prepare("SELECT title, body, created_at FROM announcements WHERE school_id = ? ORDER BY created_at DESC LIMIT 5")

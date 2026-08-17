@@ -11,21 +11,21 @@ app.use("*", requireRole("super_admin"));
 // Platform dashboard
 app.get("/dashboard", async (c) => {
   const db = c.env.DB;
-  const n = async (sql: string) => (await db.prepare(sql).first<{ n: number }>())?.n ?? 0;
+  const n = async (sql: string) => Number((await db.prepare(sql).first<{ n: number }>())?.n ?? 0);
   const [schools, active, trials, users, plans] = await Promise.all([
-    n("SELECT COUNT(*) n FROM schools"),
-    n("SELECT COUNT(*) n FROM subscriptions WHERE status = 'active'"),
-    n("SELECT COUNT(*) n FROM subscriptions WHERE status = 'trial'"),
-    n("SELECT COUNT(*) n FROM users"),
-    n("SELECT COUNT(*) n FROM subscription_plans WHERE is_active = 1"),
+    n("SELECT CAST(COUNT(*) AS INTEGER) n FROM schools"),
+    n("SELECT CAST(COUNT(*) AS INTEGER) n FROM subscriptions WHERE status = 'active'"),
+    n("SELECT CAST(COUNT(*) AS INTEGER) n FROM subscriptions WHERE status = 'trial'"),
+    n("SELECT CAST(COUNT(*) AS INTEGER) n FROM users"),
+    n("SELECT CAST(COUNT(*) AS INTEGER) n FROM subscription_plans WHERE is_active = 1"),
   ]);
-  const mrr = (await db
+  const mrr = Number((await db
     .prepare(
-      `SELECT COALESCE(SUM(p.price_monthly),0) n
+      `SELECT CAST(COALESCE(SUM(p.price_monthly),0) AS INTEGER) n
        FROM subscriptions s JOIN subscription_plans p ON p.id = s.plan_id
        WHERE s.status = 'active'`,
     )
-    .first<{ n: number }>())?.n ?? 0;
+    .first<{ n: number }>())?.n ?? 0);
   return c.json({ counts: { schools, active, trials, users, plans }, mrr });
 });
 

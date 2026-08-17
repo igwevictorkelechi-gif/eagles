@@ -23,5 +23,6 @@
       "@shared/*": ["functions/_server/*"]
     }
   },
-  "include": ["src", "functions"]
+  "include": ["src", "functions"],
+  "exclude": ["api", "functions/_server/pg.ts"]
 }

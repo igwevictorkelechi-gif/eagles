@@ -4,6 +4,11 @@ import { Hono } from "hono";
 import { handle } from "@hono/node-server/vercel";
 import app from "../functions/_server/app";
 import { createPgD1 } from "../functions/_server/pg";
+import { INJECTED } from "./_env";
+
+// Prefer real env vars; fall back to deploy-time injected config.
+process.env.DATABASE_URL ||= INJECTED.DATABASE_URL || "";
+process.env.JWT_SECRET ||= INJECTED.JWT_SECRET || "";
 
 // Reuse one shim across warm invocations.
 const db = createPgD1();

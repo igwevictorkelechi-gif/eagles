@@ -1,112 +1,107 @@
-# Deploying SAS to Cloudflare
+# Deploying SAS (Laravel) to WhoGoHost
 
-SAS runs entirely on Cloudflare: **Pages** serves the React SPA, **Pages Functions** run the Hono API, and **D1** is the database. This guide takes you from zero to a live URL.
+WhoGoHost is cPanel shared hosting (PHP + MySQL). This Laravel app is built to
+run there with no Node.js and no build step on the server (Tailwind is loaded
+via CDN, and all views are server-rendered Blade).
 
-## Prerequisites
+## Requirements on the host
+- PHP **8.2+** (set in cPanel → *MultiPHP Manager*; this app targets 8.2–8.4).
+- A **MySQL** database (cPanel → *MySQL Databases*).
+- Composer is usually **not** available on shared hosting, so we upload `vendor/`.
 
-- A [Cloudflare account](https://dash.cloudflare.com/sign-up) (free tier is enough to start).
-- Node.js 18+ and npm.
-- Wrangler (bundled as a dev dependency — use `npx wrangler …`).
-
-## 1. Authenticate Wrangler
-
-```bash
-npx wrangler login
-```
-
-This opens a browser to authorize Wrangler against your Cloudflare account. (In a headless/CI environment, set `CLOUDFLARE_API_TOKEN` instead — create a token with **Account · D1 Edit** and **Pages Edit** permissions.)
-
-## 2. Create the D1 database
+## Step 1 — Build locally
+On your machine (needs PHP + Composer):
 
 ```bash
-npx wrangler d1 create sas_db
+composer install --optimize-autoloader --no-dev
+cp .env.example .env
+php artisan key:generate            # writes APP_KEY into .env
 ```
 
-Copy the `database_id` it prints and paste it into **`wrangler.toml`**, replacing `REPLACE_WITH_YOUR_D1_DATABASE_ID`:
+This produces the `vendor/` directory you will upload.
 
-```toml
-[[d1_databases]]
-binding = "DB"
-database_name = "sas_db"
-database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"   # <- paste here
-migrations_dir = "schema/migrations"
+## Step 2 — Create the database in cPanel
+1. cPanel → **MySQL Databases** → create a database, e.g. `cpaneluser_sas`.
+2. Create a MySQL user and **add it to the database** with *All Privileges*.
+3. Note the DB name, user, and password.
+
+## Step 3 — Upload the files
+Zip the whole project (including `vendor/`) and upload via cPanel → **File Manager**,
+or use FTP. Two layouts work on WhoGoHost:
+
+**A. Subdomain/addon domain with an adjustable document root (preferred)**
+- Put the project in `~/sas` (outside `public_html`).
+- Point the domain's **Document Root** to `~/sas/public`.
+
+**B. Main domain where document root is fixed to `public_html`**
+- Upload the project to `~/sas` (outside `public_html`).
+- Move the **contents** of `~/sas/public` into `public_html`.
+- Edit `public_html/index.php` and fix the two require paths to point at `~/sas`:
+  ```php
+  require __DIR__.'/../sas/vendor/autoload.php';
+  $app = require_once __DIR__.'/../sas/bootstrap/app.php';
+  ```
+
+## Step 4 — Configure `.env`
+Edit `.env` (File Manager) with your production values:
+
+```
+APP_NAME=SAS
+APP_ENV=production
+APP_KEY=base64:...          # from step 1
+APP_DEBUG=false
+APP_URL=https://yourdomain.com
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=cpaneluser_sas
+DB_USERNAME=cpaneluser_sasuser
+DB_PASSWORD=your-db-password
+
+SESSION_DRIVER=database
+CACHE_STORE=database
 ```
 
-## 3. Apply the schema and seed data to the remote DB
+## Step 5 — Create tables + demo data
+If cPanel offers **Terminal** (or SSH):
 
 ```bash
-npm run db:migrate:remote     # creates all tables on Cloudflare D1
-npm run db:seed:remote        # loads demo school + accounts (optional)
+cd ~/sas
+php artisan migrate --force
+php artisan db:seed --force
+php artisan config:cache
 ```
 
-> Skip the seed step for a clean production database. You can always register your first school through the UI at `/start`.
+If there is **no** terminal, use the one-time web installer route included in this
+app: set `APP_INSTALL_TOKEN=some-secret` in `.env`, then visit
+`https://yourdomain.com/install?token=some-secret` once — it runs `migrate --seed`.
+Afterwards, unset `APP_INSTALL_TOKEN` (the route returns 404 when it is empty).
 
-## 4. Set the JWT secret (production)
+Alternatively import a SQL dump: run `php artisan schema:dump` locally, or export
+your local DB, and import via cPanel → **phpMyAdmin**.
 
-Do **not** ship the placeholder secret in `wrangler.toml`. Set a strong secret as a Pages secret:
-
-```bash
-npx wrangler pages secret put JWT_SECRET
-# paste a long random string when prompted
+## Step 6 — Permissions
+Ensure these are writable by PHP (File Manager → Permissions, `755`/`775`):
+```
+storage/                      (and all subfolders)
+bootstrap/cache/
 ```
 
-Generate one with: `openssl rand -base64 48`
+## Step 7 — Done
+Visit your domain. The marketing site is public; sign in at `/login`.
 
-## 5. Build and deploy
+### Demo accounts (password `Password123!`)
+| Role | Email |
+|------|-------|
+| Super Admin | super@sas.app |
+| School Admin | admin@greenfield.edu |
+| Teacher | teacher@greenfield.edu |
+| Student | student@greenfield.edu |
+| Sales Staff | sales@greenfield.edu |
 
-```bash
-npm run deploy
-```
-
-`npm run deploy` runs `vite build` then `wrangler pages deploy dist`. The first deploy creates a Pages project named **`sas-school-admin`** and returns a `*.pages.dev` URL. Done — your SaaS is live.
-
-### Deploying from Git (recommended for teams)
-
-Alternatively connect the repo in the Cloudflare dashboard (**Workers & Pages → Create → Pages → Connect to Git**):
-
-- **Build command:** `npm run build`
-- **Build output directory:** `dist`
-- Add the **D1 binding** `DB → sas_db` under Settings → Functions → D1 database bindings.
-- Add the **environment variable / secret** `JWT_SECRET`.
-
-Every push then builds and deploys automatically.
-
-## 6. Custom domain
-
-In the Pages project → **Custom domains**, add your domain (e.g. `app.yourschool.com`). Cloudflare provisions TLS automatically.
-
-## Environment / bindings summary
-
-| Binding | Type | Purpose |
-|---------|------|---------|
-| `DB` | D1 database | All application data |
-| `JWT_SECRET` | Secret | Signs session tokens |
-
-## Local development
-
-```bash
-npm run db:migrate:local
-npm run db:seed:local
-npm run build
-npx wrangler pages dev dist --port 8788 --local
-```
-
-Local D1 state lives under `.wrangler/` (git-ignored).
-
-## Roadmap (not yet built)
-
-The foundation is structured so these extend cleanly, module by module:
-
-- CBT **student exam-taking runtime** (timer, autosave, auto-submit) — schema (`exams`, `exam_questions`, `exam_attempts`) is already in place.
-- **Report-card** generation & PDF export.
-- **Payment webhooks** (Flutterwave / Paystack / Stripe) with server-side verification — subscription/plan tables are ready.
-- **Staff clock-in/out** UI (the `clock_logs` table and attendance stats exist).
-- **Notifications** center and email verification / password reset flows.
-- **File uploads** (student/staff photos, logos) via Cloudflare R2 or Supabase Storage.
-- **Audit-log** viewer UI (the `audit_logs` table exists).
-
-## Troubleshooting
-
-- **`D1_ERROR: no such table`** — you haven't run `npm run db:migrate:remote` against the remote DB.
-- **401 on every request after deploy** — `JWT_SECRET` differs between the value that signed a token and the current one; sign in again after changing it.
-- **Blank page / 404 on refresh of a deep link** — Pages serves `index.html` for unknown routes automatically for SPAs; ensure the build output dir is `dist`.
+## Notes
+- **HTTPS**: enable AutoSSL in cPanel; set `APP_URL` to `https://…`.
+- **Emails/queues**: not required for the core app; `SESSION_DRIVER=database`
+  and `CACHE_STORE=database` avoid needing Redis.
+- To reset everything: `php artisan migrate:fresh --seed --force`.

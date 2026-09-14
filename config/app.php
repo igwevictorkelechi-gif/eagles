@@ -17,6 +17,8 @@ return [
 
     'install_token' => env('APP_INSTALL_TOKEN'),
 
+    'domain' => env('APP_DOMAIN'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

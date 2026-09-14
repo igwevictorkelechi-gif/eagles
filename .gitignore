@@ -28,3 +28,6 @@ Thumbs.db
 
 # Local SQLite test DB
 /database/*.sqlite
+
+# Installer lock (created on the live server after setup)
+/storage/installed

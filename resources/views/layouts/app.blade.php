@@ -18,7 +18,7 @@
             ['app.classes','Classes','🏫'],['app.subjects','Subjects','📚'],['app.results','Results','📝'],
             ['app.exams','Examinations','🖥️'],['app.announcements','Announcements','📢'],['app.fees','Fees','💳'],
             ['app.accounting','Accounting','📒'],['app.inventory','Inventory','📦'],['app.pos','POS / Sales','🛒'],
-            ['app.settings','Settings','⚙️'],
+            ['app.billing','Billing','💠'],['app.settings','Settings','⚙️'],
         ];
     } elseif (in_array($user->role, ['teacher','staff'])) {
         $nav = [
@@ -44,6 +44,7 @@
     @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    @include('partials.pwa')
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased">
 <div class="flex min-h-screen">
@@ -89,5 +90,6 @@
         </main>
     </div>
 </div>
+    @include('partials.pwa-register')
 </body>
 </html>

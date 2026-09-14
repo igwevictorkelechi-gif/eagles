@@ -15,7 +15,13 @@
         <tbody class="divide-y divide-slate-100">
             @forelse ($schools as $s)
                 <tr class="hover:bg-slate-50">
-                    <td class="px-4 py-3 font-medium text-slate-800">{{ $s->name }}</td>
+                    <td class="px-4 py-3 font-medium text-slate-800">
+                        {{ $s->name }}
+                        @php $url = \App\Support\Tenant::url($s); @endphp
+                        @if ($url)
+                            <a href="{{ $url }}" target="_blank" rel="noopener" class="mt-0.5 block text-xs font-normal text-brand-600 hover:underline">{{ preg_replace('#^https?://#', '', $url) }}</a>
+                        @endif
+                    </td>
                     <td class="px-4 py-3 text-slate-500">{{ $s->email ?? '—' }}</td>
                     <td class="px-4 py-3">{{ $s->plan_name ?? '—' }}</td>
                     <td class="px-4 py-3">@if($s->sub_status)@include('partials.badge', ['status' => $s->sub_status])@else — @endif</td>

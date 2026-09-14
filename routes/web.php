@@ -6,18 +6,24 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\SuperAdmin\PlatformController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboard;
+use App\Http\Controllers\InstallController;
+use App\Http\Controllers\PaymentController;
 
-// ---------- One-time web installer (for hosts without SSH, e.g. WhoGoHost) ----------
-// Enabled only when APP_INSTALL_TOKEN is set and matches ?token=. Runs migrate --seed.
-// Unset APP_INSTALL_TOKEN after first use to disable.
-Route::get('/install', function (\Illuminate\Http\Request $request) {
-    $token = config('app.install_token');
-    abort_unless($token && hash_equals($token, (string) $request->query('token')), 404);
-    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-    \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
-    return response('<pre>SAS installed.\n\n' . e(\Illuminate\Support\Facades\Artisan::output())
-        . "\n\nNow unset APP_INSTALL_TOKEN in your .env to disable this route.</pre>");
+// ---------- Web installer wizard (WhoGoHost / cPanel friendly) ----------
+// Active until storage/installed exists; then it disables itself.
+Route::controller(InstallController::class)->prefix('install')->name('install.')->group(function () {
+    Route::get('/', 'requirements')->name('requirements');
+    Route::get('/database', 'database')->name('database');
+    Route::post('/database', 'saveDatabase')->name('database.save');
+    Route::get('/mail', 'mail')->name('mail');
+    Route::post('/mail', 'saveMail')->name('mail.save');
+    Route::get('/run', 'run')->name('run');
+    Route::get('/finished', 'finished')->name('finished');
 });
+
+// ---------- Payment gateway return + webhooks (Paystack / CheqPay) ----------
+Route::get('/pay/callback/{gateway}', [PaymentController::class, 'callback'])->name('pay.callback');
+Route::post('/pay/webhook/{gateway}', [PaymentController::class, 'webhook'])->name('pay.webhook');
 
 // ---------- Public marketing ----------
 Route::get('/', [MarketingController::class, 'home'])->name('home');
@@ -82,6 +88,9 @@ Route::middleware(['auth', 'role:school_admin'])->prefix('app')->name('app.')->g
 
     Route::get('/settings', [Admin\SettingsController::class, 'edit'])->name('settings');
     Route::put('/settings', [Admin\SettingsController::class, 'update'])->name('settings.update');
+
+    Route::get('/billing', [Admin\BillingController::class, 'index'])->name('billing');
+    Route::post('/billing/checkout', [Admin\BillingController::class, 'checkout'])->name('billing.checkout');
 });
 
 // ---------- Student / parent portal ----------

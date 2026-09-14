@@ -13,7 +13,7 @@ users, academics, finances and subscriptions. Primary brand color: **green** ðŸŒ
 | Layer | Technology |
 |-------|-----------|
 | Framework | Laravel 12 (PHP 8.2+) |
-| Views | Blade (server-rendered) + Tailwind CSS via CDN |
+| Views | Blade (server-rendered) + precompiled Tailwind CSS (no CDN) |
 | Database | MySQL (production) / SQLite (local dev) |
 | Auth | Laravel session auth, hashed passwords, role middleware |
 | Hosting | WhoGoHost / any cPanel PHP host â€” see `DEPLOYMENT.md` |

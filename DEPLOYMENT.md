@@ -1,8 +1,8 @@
 # Deploying SAS (Laravel) to WhoGoHost
 
 WhoGoHost is cPanel shared hosting (PHP + MySQL). This Laravel app is built to
-run there with no Node.js and no build step on the server (Tailwind is loaded
-via CDN, and all views are server-rendered Blade).
+run there with no Node.js and no build step on the server: the Tailwind stylesheet
+is precompiled into `public/css/app.css` and all views are server-rendered Blade.
 
 ## Requirements on the host
 - PHP **8.2+** (set in cPanel → *MultiPHP Manager*; this app targets 8.2–8.4).

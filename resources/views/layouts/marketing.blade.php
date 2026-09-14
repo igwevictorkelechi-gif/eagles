@@ -5,15 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'SAS — School Administration System')</title>
     <meta name="description" content="SAS — the complete school operating system. Multi-tenant School Administration SaaS.">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { theme: { extend: { colors: { brand: {
-            50:'#f0fdf4',100:'#dcfce7',200:'#bbf7d0',300:'#86efac',400:'#4ade80',
-            500:'#22c55e',600:'#16a34a',700:'#15803d',800:'#166534',900:'#14532d' } } } } };
-    </script>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>body{font-family:Inter,system-ui,sans-serif}</style>
 </head>
 <body class="bg-white text-slate-800 antialiased">
     <header class="sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur">

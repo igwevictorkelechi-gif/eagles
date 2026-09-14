@@ -37,16 +37,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'SAS')</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { theme: { extend: { colors: { brand: {
-            50:'#f0fdf4',100:'#dcfce7',200:'#bbf7d0',300:'#86efac',400:'#4ade80',
-            500:'{{ $school->primary_color ?? '#22c55e' }}',600:'{{ $school->primary_color ?? '#16a34a' }}',
-            700:'#15803d',800:'#166534',900:'#14532d' } } } } };
-    </script>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    @if (!empty($school?->primary_color))
+        {{-- Per-school branding: override the brand ramp at runtime. --}}
+        <style>:root{--brand-500:{{ $school->primary_color }};--brand-600:{{ $school->primary_color }};--brand-700:{{ $school->secondary_color ?: $school->primary_color }};}</style>
+    @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>body{font-family:Inter,system-ui,sans-serif}</style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased">
 <div class="flex min-h-screen">

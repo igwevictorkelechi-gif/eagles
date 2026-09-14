@@ -12,7 +12,7 @@ users, academics, finances and subscriptions. Primary brand color: **green** ðŸŒ
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Laravel 11 (PHP 8.2+) |
+| Framework | Laravel 12 (PHP 8.2+) |
 | Views | Blade (server-rendered) + Tailwind CSS via CDN |
 | Database | MySQL (production) / SQLite (local dev) |
 | Auth | Laravel session auth, hashed passwords, role middleware |

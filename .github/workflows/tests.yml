@@ -19,7 +19,9 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: [8.3, 8.4, 8.5]
+        # PHP versions this app supports (Laravel 12) and that cPanel hosts
+        # such as WhoGoHost offer. Keep in sync with composer.json "php".
+        php: [8.2, 8.3, 8.4]
 
     name: PHP ${{ matrix.php }}
 

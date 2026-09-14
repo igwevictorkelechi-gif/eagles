@@ -35,4 +35,20 @@ return [
         ],
     ],
 
+
+    'paystack' => [
+        'public' => env('PAYSTACK_PUBLIC_KEY'),
+        'secret' => env('PAYSTACK_SECRET_KEY'),
+    ],
+
+    'cheqpay' => [
+        'public' => env('CHEQPAY_PUBLIC_KEY'),
+        'secret' => env('CHEQPAY_SECRET_KEY'),
+        'base_url' => env('CHEQPAY_BASE_URL', 'https://api.cheqpay.com/v1'),
+        'currency' => env('CHEQPAY_CURRENCY', 'NGN'),
+        'init_path' => env('CHEQPAY_INIT_PATH', '/transactions/initialize'),
+        'verify_path' => env('CHEQPAY_VERIFY_PATH', '/transactions/verify/'),
+        'signature_header' => env('CHEQPAY_SIGNATURE_HEADER', 'x-cheqpay-signature'),
+    ],
+
 ];

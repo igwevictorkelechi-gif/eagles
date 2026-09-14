@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin;
 use App\Http\Controllers\SuperAdmin\PlatformController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboard;
 use App\Http\Controllers\InstallController;
+use App\Http\Controllers\PaymentController;
 
 // ---------- Web installer wizard (WhoGoHost / cPanel friendly) ----------
 // Active until storage/installed exists; then it disables itself.
@@ -19,6 +20,10 @@ Route::controller(InstallController::class)->prefix('install')->name('install.')
     Route::get('/run', 'run')->name('run');
     Route::get('/finished', 'finished')->name('finished');
 });
+
+// ---------- Payment gateway return + webhooks (Paystack / CheqPay) ----------
+Route::get('/pay/callback/{gateway}', [PaymentController::class, 'callback'])->name('pay.callback');
+Route::post('/pay/webhook/{gateway}', [PaymentController::class, 'webhook'])->name('pay.webhook');
 
 // ---------- Public marketing ----------
 Route::get('/', [MarketingController::class, 'home'])->name('home');
@@ -83,6 +88,9 @@ Route::middleware(['auth', 'role:school_admin'])->prefix('app')->name('app.')->g
 
     Route::get('/settings', [Admin\SettingsController::class, 'edit'])->name('settings');
     Route::put('/settings', [Admin\SettingsController::class, 'update'])->name('settings.update');
+
+    Route::get('/billing', [Admin\BillingController::class, 'index'])->name('billing');
+    Route::post('/billing/checkout', [Admin\BillingController::class, 'checkout'])->name('billing.checkout');
 });
 
 // ---------- Student / parent portal ----------

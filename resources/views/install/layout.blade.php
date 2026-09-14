@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    @include('partials.pwa')
 </head>
 <body class="min-h-screen bg-gradient-to-br from-brand-50 to-slate-100 text-slate-800 antialiased">
 @php $steps = ['requirements'=>'Requirements','database'=>'Database','mail'=>'Email','finished'=>'Done']; $current = $step ?? 'requirements'; @endphp
@@ -39,5 +40,6 @@
 
     <p class="mt-6 text-center text-xs text-slate-400">SAS — School Administration System</p>
 </div>
+    @include('partials.pwa-register')
 </body>
 </html>

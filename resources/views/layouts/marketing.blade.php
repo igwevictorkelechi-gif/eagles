@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    @include('partials.pwa')
 </head>
 <body class="bg-white text-slate-800 antialiased">
     <header class="sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur">
@@ -52,5 +53,6 @@
         </div>
         <div class="border-t border-slate-200 py-4 text-center text-xs text-slate-400">© {{ date('Y') }} SAS — School Administration System.</div>
     </footer>
+    @include('partials.pwa-register')
 </body>
 </html>

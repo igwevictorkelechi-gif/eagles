@@ -15,9 +15,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureRole::class,
         ]);
-        // Show the setup wizard on every page until the app is installed.
+        // Resolve the per-school subdomain tenant (no-op in single-domain mode),
+        // then show the setup wizard on every page until the app is installed.
         $middleware->web(append: [
+            \App\Http\Middleware\ResolveTenant::class,
             \App\Http\Middleware\EnsureInstalled::class,
+        ]);
+        // Payment webhooks are server-to-server (verified by signature), so
+        // they are exempt from CSRF.
+        $middleware->validateCsrfTokens(except: [
+            'pay/webhook/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

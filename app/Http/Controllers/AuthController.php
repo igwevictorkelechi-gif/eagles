@@ -6,6 +6,7 @@ use App\Models\School;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
+use App\Support\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -25,10 +26,18 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        // Prefer a super admin (school_id null), else any active user with this email.
-        $user = User::where('email', $data['email'])->where('is_active', true)
-            ->orderByRaw('CASE WHEN school_id IS NULL THEN 0 ELSE 1 END')
-            ->first();
+        // When served from a school's subdomain, scope the login to that
+        // school so users only ever authenticate against their own tenant.
+        $tenant = Tenant::current();
+
+        $query = User::where('email', $data['email'])->where('is_active', true);
+        if ($tenant) {
+            $query->where('school_id', $tenant->id);
+        } else {
+            // Prefer a super admin (school_id null), else any active user.
+            $query->orderByRaw('CASE WHEN school_id IS NULL THEN 0 ELSE 1 END');
+        }
+        $user = $query->first();
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
             return back()->withErrors(['email' => 'Invalid email or password.'])->onlyInput('email');
@@ -38,7 +47,7 @@ class AuthController extends Controller
         $user->forceFill(['last_login_at' => now()])->saveQuietly();
         $request->session()->regenerate();
 
-        return redirect()->intended($this->homeFor($user));
+        return redirect()->intended(self::homeFor($user));
     }
 
     public function showRegister()
@@ -103,7 +112,7 @@ class AuthController extends Controller
         return redirect()->route('login');
     }
 
-    public function homeFor(User $user): string
+    public static function homeFor(User $user): string
     {
         return match ($user->role) {
             'super_admin' => route('platform.dashboard'),

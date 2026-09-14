@@ -80,8 +80,55 @@ Visit your domain. The marketing site is public; sign in at `/login`.
 | Student | student@greenfield.edu |
 | Sales Staff | sales@greenfield.edu |
 
+## Step 7 — Payment gateways (Paystack & CheqPay)
+Schools pay for subscriptions from **App → Billing**. Add whichever gateway keys
+you have to `.env` (or re-run the wizard's finished screen); a gateway only shows
+on the billing page once its secret key is present:
+
+```
+PAYSTACK_PUBLIC_KEY=pk_live_xxx
+PAYSTACK_SECRET_KEY=sk_live_xxx
+
+CHEQPAY_PUBLIC_KEY=xxx
+CHEQPAY_SECRET_KEY=xxx
+# Optional — override only if CheqPay gives you a different API base/paths:
+CHEQPAY_BASE_URL=https://api.cheqpay.com/v1
+```
+
+Set each gateway's **webhook URL** in its dashboard so subscriptions activate even
+if the buyer closes the tab on the payment page:
+- Paystack: `https://your-domain/pay/webhook/paystack`
+- CheqPay:  `https://your-domain/pay/webhook/cheqpay`
+
+Webhooks are verified by signature (HMAC) and are exempt from CSRF; no extra
+config is needed.
+
+## Step 8 — Per-school subdomains (optional)
+Each school can get its own address, e.g. `greenfield.your-domain`. Leave this off
+by keeping `APP_DOMAIN` blank (the app then runs on a single domain). To enable it:
+
+1. In `.env` set the shared parent domain:
+   ```
+   APP_DOMAIN=your-domain.com
+   ```
+2. In cPanel create a **wildcard subdomain**: *Domains → Create* a subdomain named
+   `*` on your domain, with its **Document Root** pointed at the same `public/`
+   folder as the main site. (Some WhoGoHost plans require asking support to enable
+   wildcard subdomains.)
+3. Add a wildcard **DNS A record** `*.your-domain.com` pointing at the same server
+   IP as the main domain, then re-run AutoSSL (a wildcard SSL cert covers
+   `*.your-domain.com`).
+
+Once live, a school's login and app live at `{slug}.your-domain.com`; the slug is
+shown next to each school in **Super Admin → Schools**. The bare domain and `www`
+stay the public marketing/platform site. Logging in on a subdomain is scoped to
+that school.
+
 ## Notes
 - **HTTPS**: enable AutoSSL in cPanel; set `APP_URL` to `https://…`.
-- **Emails/queues**: not required for the core app; `SESSION_DRIVER=database`
-  and `CACHE_STORE=database` avoid needing Redis.
+- **PWA**: SAS is installable (Add to Home Screen / Install app) and works offline
+  for static assets. No configuration needed — the manifest and service worker
+  ship in `public/`.
+- **Emails/queues**: not required for the core app; the shipped `.env.example`
+  uses `SESSION_DRIVER=file` and `CACHE_STORE=file` so nothing extra is needed.
 - To reset everything: `php artisan migrate:fresh --seed --force`.

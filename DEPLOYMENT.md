@@ -42,53 +42,33 @@ or use FTP. Two layouts work on WhoGoHost:
   $app = require_once __DIR__.'/../sas/bootstrap/app.php';
   ```
 
-## Step 4 — Configure `.env`
-Edit `.env` (File Manager) with your production values:
+## Step 4 — Run the setup wizard (in your browser)
 
-```
-APP_NAME=SAS
-APP_ENV=production
-APP_KEY=base64:...          # from step 1
-APP_DEBUG=false
-APP_URL=https://yourdomain.com
+Open your domain. On the first visit SAS redirects to a **setup wizard** that
+does the rest — no file editing, no terminal:
 
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=cpaneluser_sas
-DB_USERNAME=cpaneluser_sasuser
-DB_PASSWORD=your-db-password
+1. **Requirements** — it checks PHP version, extensions and folder permissions.
+2. **Database** — enter the MySQL database, user and password you created in
+   Step 2. It tests the connection live before saving.
+3. **Email (SMTP)** — optional; enter a cPanel email account's SMTP details, or
+   skip it for now. There's a "send test email" button.
+4. It then **creates all the tables and demo data automatically** and locks the
+   installer.
 
-SESSION_DRIVER=database
-CACHE_STORE=database
-```
+That's it — you're taken to a finished screen with the demo logins.
 
-## Step 5 — Create tables + demo data
-If cPanel offers **Terminal** (or SSH):
+> Prefer the command line? If cPanel has **Terminal/SSH** you can instead run
+> `cd ~/sas && php artisan migrate --force && php artisan db:seed --force` after
+> filling `.env`, and the wizard will detect it's installed.
 
-```bash
-cd ~/sas
-php artisan migrate --force
-php artisan db:seed --force
-php artisan config:cache
-```
-
-If there is **no** terminal, use the one-time web installer route included in this
-app: set `APP_INSTALL_TOKEN=some-secret` in `.env`, then visit
-`https://yourdomain.com/install?token=some-secret` once — it runs `migrate --seed`.
-Afterwards, unset `APP_INSTALL_TOKEN` (the route returns 404 when it is empty).
-
-Alternatively import a SQL dump: run `php artisan schema:dump` locally, or export
-your local DB, and import via cPanel → **phpMyAdmin**.
-
-## Step 6 — Permissions
+## Step 5 — Permissions (set before the wizard)
 Ensure these are writable by PHP (File Manager → Permissions, `755`/`775`):
 ```
 storage/                      (and all subfolders)
 bootstrap/cache/
 ```
 
-## Step 7 — Done
+## Step 6 — Done
 Visit your domain. The marketing site is public; sign in at `/login`.
 
 ### Demo accounts (password `Password123!`)
